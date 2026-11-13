@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة متبرعي الدم - آمن ومتزامن</title>
+    <style>
+        :root {
+            --primary-color: #c0392b;
+            --primary-hover: #962d22;
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #e0e0e0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* شاشة تسجيل الدخول */
+        #loginOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .login-card {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .login-card h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            color: var(--primary-color);
+            margin-bottom: 5px;
+        }
+
+        header p {
+            color: #666;
+            margin-top: 0;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .card h2 {
+            margin-top: 0;
+            font-size: 1.25rem;
+            color: var(--primary-color);
+            border-bottom: 2px solid #f1f1f1;
+            padding-bottom: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .form-group input, .form-group select {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            font-weight: bold;
+            margin-top: 15px;
+            width: 100%;
+        }
+
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
+
+        .search-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .search-bar input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            background-color: white;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background-color: #fdfdfd;
+        }
+
+        .actions-btn {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .actions-btn:hover {
+            background-color: #c0392b;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #888;
+            padding: 30px;
+        }
+
+        .error-msg {
+            color: #e74c3c;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .logout-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- شاشة تسجيل الدخول المحمية -->
+    <div id="loginOverlay">
+        <div class="login-card">
+            <h2>تسجيل الدخول للنظام</h2>
+            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">الرجاء إدخال بيانات الاعتماد الخاصة بفريق العمل</p>
+            <form id="loginForm">
+                <div class="form-group" style="margin-bottom: 15px; text-align: right;">
+                    <label for="username">اسم المستخدم</label>
+                    <input type="text" id="username" required placeholder="أدخل اسم المستخدم">
+                </div>
+                <div class="form-group" style="margin-bottom: 15px; text-align: right;">
+                    <label for="password">كلمة المرور</label>
+                    <input type="password" id="password" required placeholder="أدخل كلمة المرور">
+                </div>
+                <button type="submit" class="btn">دخول</button>
+                <div id="loginError" class="error-msg">اسم المستخدم أو كلمة المرور غير صحيحة!</div>
+            </form>
+        </div>
+    </div>
+
+    <!-- النظام الأساسي -->
+    <div class="container hidden" id="mainApp">
+        <div class="top-bar">
+            <span>مرحباً بك، <strong>فريق العمل</strong></span>
+            <button class="logout-btn" id="logoutBtn">تسجيل الخروج</button>
+        </div>
+
+        <header>
+            <h1>نظام إدارة متبرعي الدم</h1>
+            <p>سجل سحابي آمن ومشفر ومتزامن لحظياً</p>
+        </header>
+
+        <!-- نموذج الإضافة -->
+        <div class="card">
+            <h2>إضافة متبرع جديد</h2>
+            <form id="donorForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="bagId">رقم الكيس</label>
+                        <input type="text" id="bagId" required placeholder="مثال: BG-9921">
+                    </div>
+                    <div class="form-group">
+                        <label for="donorName">اسم المتبرع الكامل</label>
+                        <input type="text" id="donorName" required placeholder="أدخل اسم المتبرع">
+                    </div>
+                    <div class="form-group">
+                        <label for="birthDate">تاريخ الازدياد</label>
+                        <input type="date" id="birthDate" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">مكان الإقامة</label>
+                        <input type="text" id="location" required placeholder="المدينة / الحي">
+                    </div>
+                    <div class="form-group">
+                        <label for="bloodGroup">زمرة الدم</label>
+                        <select id="bloodGroup" required>
+                            <option value="">اختر الزمرة</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">رقم الهاتف</label>
+                        <input type="tel" id="phone" required placeholder="رقم الهاتف">
+                    </div>
+                    <div class="form-group">
+                        <label for="donationDate">تاريخ التبرع</label>
+                        <input type="date" id="donationDate" required>
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="width: auto; padding: 10px 25px;">حفظ المتبرع</button>
+            </form>
+        </div>
+
+        <!-- جدول عرض المتبرعين والبحث -->
+        <div class="card">
+            <h2>قائمة المتبرعين المسجلين</h2>
+            <div class="search-bar">
+                <input type="text" id="searchInput" placeholder="ابحث بالاسم، رقم الكيس، أو زمرة الدم...">
+            </div>
+            <div style="overflow-x: auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>رقم الكيس</th>
+                            <th>اسم المتبرع</th>
+                            <th>تاريخ الازدياد</th>
+                            <th>مكان الإقامة</th>
+                            <th>زمرة الدم</th>
+                            <th>رقم الهاتف</th>
+                            <th>تاريخ التبرع</th>
+                            <th>الإجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donorTableBody">
+                        <tr><td colspan="8" class="empty-state">جاري تحميل البيانات...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- برمجة التطبيق والربط السحابي -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+        // بيانات الدخول الخاصة بزملاء العمل
+        const AUTH_USER = "admin";       
+        const AUTH_PASS = "blood2026";   
+
+        // إعدادات Firebase الخاصة بك التي استخرجناها
+        const firebaseConfig = {
+            apiKey: "AIzaSyBfy7XI64ckRRc8JJp3th8WMGRua3XDP0s",
+            authDomain: "blooddonorsapp-f04e9.firebaseapp.com",
+            projectId: "blooddonorsapp-f04e9",
+            storageBucket: "blooddonorsapp-f04e9.firebasestorage.app",
+            messagingSenderId: "487349836740",
+            appId: "1:487349836740:web:755abe8d088bfa4669c291"
+        };
+
+        const loginForm = document.getElementById('loginForm');
+        const loginOverlay = document.getElementById('loginOverlay');
+        const mainApp = document.getElementById('mainApp');
+        const loginError = document.getElementById('loginError');
+        const logoutBtn = document.getElementById('logoutBtn');
+
+        if (sessionStorage.getItem('isLoggedIn') === 'true') {
+            loginOverlay.classList.add('hidden');
+            mainApp.classList.remove('hidden');
+            initApp();
+        }
+
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const u = document.getElementById('username').value.trim();
+            const p = document.getElementById('password').value.trim();
+
+            if (u === AUTH_USER && p === AUTH_PASS) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                loginOverlay.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                initApp();
+            } else {
+                loginError.style.display = 'block';
+            }
+        });
+
+        logoutBtn.addEventListener('click', function() {
+            sessionStorage.removeItem('isLoggedIn');
+            location.reload();
+        });
+
+        function initApp() {
+            const app = initializeApp(firebaseConfig);
+            const db = getFirestore(app);
+
+            const donorForm = document.getElementById('donorForm');
+            const donorTableBody = document.getElementById('donorTableBody');
+            const searchInput = document.getElementById('searchInput');
+
+            let allDonors = [];
+
+            onSnapshot(collection(db, "donors"), (snapshot) => {
+                allDonors = [];
+                snapshot.forEach((docSnap) => {
+                    allDonors.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderTable(allDonors);
+            });
+
+            function renderTable(data) {
+                donorTableBody.innerHTML = '';
+                if (data.length === 0) {
+                    donorTableBody.innerHTML = `<tr><td colspan="8" class="empty-state">لا توجد بيانات متبرعين مسجلة حالياً.</td></tr>`;
+                    return;
+                }
+
+                data.forEach((donor) => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${donor.bagId}</td>
+                        <td>${donor.donorName}</td>
+                        <td>${donor.birthDate}</td>
+                        <td>${donor.location}</td>
+                        <td><strong>${donor.bloodGroup}</strong></td>
+                        <td>${donor.phone}</td>
+                        <td>${donor.donationDate}</td>
+                        <td><button class="actions-btn" onclick="deleteDonor('${donor.id}')">حذف</button></td>
+                    `;
+                    donorTableBody.appendChild(tr);
+                });
+            }
+
+            donorForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const newDonor = {
+                    bagId: document.getElementById('bagId').value,
+                    donorName: document.getElementById('donorName').value,
+                    birthDate: document.getElementById('birthDate').value,
+                    location: document.getElementById('location').value,
+                    bloodGroup: document.getElementById('bloodGroup').value,
+                    phone: document.getElementById('phone').value,
+                    donationDate: document.getElementById('donationDate').value
+                };
+
+                try {
+                    await addDoc(collection(db, "donors"), newDonor);
+                    donorForm.reset();
+                } catch (error) {
+                    alert("حدث خطأ أثناء حفظ البيانات: " + error.message);
+                }
+            });
+
+            window.deleteDonor = async function(id) {
+                if (confirm('هل أنت متأكد من حذف هذا المتبرع؟')) {
+                    try {
+                        await deleteDoc(doc(db, "donors", id));
+                    } catch (error) {
+                        alert("حدث خطأ أثناء الحذف: " + error.message);
+                    }
+                }
+            }
+
+            searchInput.addEventListener('input', function(e) {
+                const query = e.target.value.toLowerCase();
+                const filtered = allDonors.filter(donor => 
+                    donor.donorName.toLowerCase().includes(query) ||
+                    donor.bagId.toLowerCase().includes(query) ||
+                    donor.bloodGroup.toLowerCase().includes(query) ||
+                    donor.location.toLowerCase().includes(query)
+                );
+                renderTable(filtered);
+            });
+        }
+    </script>
+
+</body>
+</html>
